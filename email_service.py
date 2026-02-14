@@ -12,9 +12,17 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'rmnguxwerqmdzzrm')
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'dattusrinu1122@gmail.com')
 
 def send_email_with_attachment(to_email, to_name, subject, html_body, pdf_attachment=None, pdf_filename='certificate.pdf'):
-    """Send email with optional PDF attachment"""
+    """Send email with optional PDF attachment using SMTP"""
+    
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email import encoders
     
     try:
+        print(f"Attempting to send email to {to_email}")
+        
         # Create message
         msg = MIMEMultipart('alternative')
         msg['From'] = f"Alumni Network <{GMAIL_USER}>"
@@ -22,27 +30,52 @@ def send_email_with_attachment(to_email, to_name, subject, html_body, pdf_attach
         msg['Subject'] = subject
         
         # Attach HTML body
-        msg.attach(MIMEText(html_body, 'html'))
+        html_part = MIMEText(html_body, 'html', 'utf-8')
+        msg.attach(html_part)
         
         # Attach PDF if provided
         if pdf_attachment:
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(pdf_attachment.read())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename= {pdf_filename}')
-            msg.attach(part)
+            try:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(pdf_attachment.read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f'attachment; filename={pdf_filename}')
+                msg.attach(part)
+                print("PDF attachment added")
+            except Exception as pdf_err:
+                print(f"PDF attachment error: {pdf_err}")
         
-        # Connect and send
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        # Connect to Gmail SMTP
+        print(f"Connecting to Gmail SMTP...")
+        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
+        server.set_debuglevel(1)  # Enable debug output
+        
+        print("Starting TLS...")
         server.starttls()
+        
+        print(f"Logging in as {GMAIL_USER}...")
         server.login(GMAIL_USER, GMAIL_PASSWORD)
+        
+        print("Sending email...")
         server.send_message(msg)
+        
+        print("Closing connection...")
         server.quit()
         
+        print(f"✓ Email sent successfully to {to_email}")
         return True
         
+    except smtplib.SMTPAuthenticationError as auth_err:
+        print(f"✗ SMTP Authentication Error: {auth_err}")
+        print("Please check your Gmail credentials and App Password")
+        return False
+    except smtplib.SMTPException as smtp_err:
+        print(f"✗ SMTP Error: {smtp_err}")
+        return False
     except Exception as e:
-        print(f"Email error: {str(e)}")
+        print(f"✗ Email sending error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def get_certificate_email_template(name, batch_year, amount, donation_id):
