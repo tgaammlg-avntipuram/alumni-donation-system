@@ -2,11 +2,12 @@ services:
   - type: web
     name: alumni-donation-system
     env: python
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9
       - key: SECRET_KEY
         generateValue: true
       - key: RAZORPAY_KEY_ID
@@ -19,3 +20,36 @@ services:
         value: rmnguxwerqmdzzrm
       - key: ADMIN_EMAIL
         value: dattusrinu1122@gmail.com
+```
+
+---
+
+## After Updating
+
+1. **Commit all changes to GitHub**
+2. **Go to Render Dashboard**
+3. **Click "Manual Deploy"** → **"Deploy latest commit"**
+4. **Wait for build to complete** (should succeed now)
+
+---
+
+## Expected Output After Fix:
+```
+==> Using Python version 3.11.9
+==> Running build command 'pip install -r requirements.txt'...
+Collecting Flask==3.0.3
+  Downloading flask-3.0.3-py3-none-any.whl
+Collecting Werkzeug==3.0.3
+  Downloading werkzeug-3.0.3-py3-none-any.whl
+Collecting razorpay==1.4.2
+  Downloading razorpay-1.4.2-py3-none-any.whl
+Collecting Pillow==11.0.0
+  Downloading Pillow-11.0.0-cp311-cp311-manylinux_2_28_x86_64.whl
+Collecting reportlab==4.2.5
+  Downloading reportlab-4.2.5-py3-none-any.whl
+Collecting gunicorn==23.0.0
+  Downloading gunicorn-23.0.0-py3-none-any.whl
+Collecting python-dotenv==1.0.1
+  Downloading python_dotenv-1.0.1-py3-none-any.whl
+Successfully installed Flask-3.0.3 Werkzeug-3.0.3 ...
+==> Build succeeded 🎉
