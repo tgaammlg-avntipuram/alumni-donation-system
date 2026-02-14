@@ -61,6 +61,10 @@ def verify_payment():
     try:
         data = request.json
         
+        print("=== Payment Verification Started ===")
+        print(f"Order ID: {data.get('razorpay_order_id')}")
+        print(f"Payment ID: {data.get('razorpay_payment_id')}")
+        
         # Verify signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
@@ -68,61 +72,91 @@ def verify_payment():
             'razorpay_signature': data['razorpay_signature']
         }
         
-        razorpay_client.utility.verify_payment_signature(params_dict)
+        try:
+            razorpay_client.utility.verify_payment_signature(params_dict)
+            print("✓ Signature verified successfully")
+        except Exception as sig_error:
+            print(f"✗ Signature verification failed: {str(sig_error)}")
+            raise Exception(f'Invalid payment signature: {str(sig_error)}')
         
         # Save donation to database
-        donation_id = add_donation(
-            name=data['name'],
-            email=data['email'],
-            batch_year=int(data['batch_year']),
-            amount=float(data['amount']),
-            payment_id=data['razorpay_payment_id'],
-            order_id=data['razorpay_order_id'],
-            message=data.get('message', '')
-        )
+        try:
+            donation_id = add_donation(
+                name=data['name'],
+                email=data['email'],
+                batch_year=int(data['batch_year']),
+                amount=float(data['amount']),
+                payment_id=data['razorpay_payment_id'],
+                order_id=data['razorpay_order_id'],
+                message=data.get('message', '')
+            )
+            print(f"✓ Donation saved with ID: {donation_id}")
+        except Exception as db_error:
+            print(f"✗ Database error: {str(db_error)}")
+            raise Exception(f'Database error: {str(db_error)}')
         
         # Generate certificate PDF
-        pdf_buffer = generate_certificate_pdf(
-            name=data['name'],
-            batch_year=int(data['batch_year']),
-            amount=float(data['amount']),
-            donation_id=donation_id
-        )
+        try:
+            pdf_buffer = generate_certificate_pdf(
+                name=data['name'],
+                batch_year=int(data['batch_year']),
+                amount=float(data['amount']),
+                donation_id=donation_id
+            )
+            print("✓ Certificate PDF generated")
+        except Exception as pdf_error:
+            print(f"⚠ Certificate generation error: {str(pdf_error)}")
+            # Continue even if PDF fails
+            pdf_buffer = None
         
         # Send email with certificate
-        email_template = get_certificate_email_template(
-            name=data['name'],
-            batch_year=int(data['batch_year']),
-            amount=float(data['amount']),
-            donation_id=donation_id
-        )
-        
-        email_sent = send_email_with_attachment(
-            to_email=data['email'],
-            to_name=data['name'],
-            subject='Thank You for Your Donation - Certificate Attached',
-            html_body=email_template,
-            pdf_attachment=pdf_buffer,
-            pdf_filename=f'donation_certificate_{donation_id}.pdf'
-        )
-        
-        if email_sent:
-            mark_certificate_sent(donation_id)
-            add_email_log(data['email'], 'Donation Certificate', 'sent')
+        email_sent = False
+        try:
+            email_template = get_certificate_email_template(
+                name=data['name'],
+                batch_year=int(data['batch_year']),
+                amount=float(data['amount']),
+                donation_id=donation_id
+            )
+            
+            email_sent = send_email_with_attachment(
+                to_email=data['email'],
+                to_name=data['name'],
+                subject='Thank You for Your Donation - Certificate Attached',
+                html_body=email_template,
+                pdf_attachment=pdf_buffer,
+                pdf_filename=f'donation_certificate_{donation_id}.pdf'
+            )
+            
+            if email_sent:
+                mark_certificate_sent(donation_id)
+                add_email_log(data['email'], 'Donation Certificate', 'sent')
+                print("✓ Email sent successfully")
+            else:
+                print("⚠ Email sending failed")
+        except Exception as email_error:
+            print(f"⚠ Email error: {str(email_error)}")
+            # Continue even if email fails
         
         # Send notification to admin
-        send_email_with_attachment(
-            to_email=ADMIN_EMAIL,
-            to_name='Admin',
-            subject=f'New Donation Received - ₹{data["amount"]}',
-            html_body=f"""
-            <h3>New Donation Received</h3>
-            <p><strong>Donor:</strong> {data['name']}</p>
-            <p><strong>Batch:</strong> {data['batch_year']}</p>
-            <p><strong>Amount:</strong> ₹{data['amount']}</p>
-            <p><strong>Payment ID:</strong> {data['razorpay_payment_id']}</p>
-            """
-        )
+        try:
+            send_email_with_attachment(
+                to_email=ADMIN_EMAIL,
+                to_name='Admin',
+                subject=f'New Donation Received - ₹{data["amount"]}',
+                html_body=f"""
+                <h3>New Donation Received</h3>
+                <p><strong>Donor:</strong> {data['name']}</p>
+                <p><strong>Batch:</strong> {data['batch_year']}</p>
+                <p><strong>Amount:</strong> ₹{data['amount']}</p>
+                <p><strong>Payment ID:</strong> {data['razorpay_payment_id']}</p>
+                """
+            )
+            print("✓ Admin notification sent")
+        except Exception as admin_error:
+            print(f"⚠ Admin notification error: {str(admin_error)}")
+        
+        print("=== Payment Verification Completed Successfully ===")
         
         return jsonify({
             'success': True,
@@ -131,7 +165,13 @@ def verify_payment():
         })
         
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 400
+        print(f"✗✗✗ VERIFICATION ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False, 
+            'message': str(e)
+        }), 400
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
