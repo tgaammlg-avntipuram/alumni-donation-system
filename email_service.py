@@ -47,13 +47,19 @@ def send_email_with_attachment(to_email, to_name, subject, html_body, pdf_attach
 
 def get_certificate_email_template(name, batch_year, amount, donation_id):
     """Get HTML template for donation certificate email"""
+    from datetime import datetime
     
-    cert_number = f"DON-{donation_id:06d}"
+    certificate_number = f'DON-{donation_id:06d}'
+    date = datetime.now().strftime('%B %d, %Y')
+    payment_id = f'Payment #{donation_id}'
+    year = datetime.now().year
+    admin_email = ADMIN_EMAIL
     
     return f"""
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="UTF-8">
         <style>
             body {{
                 font-family: 'Georgia', serif;
@@ -62,80 +68,74 @@ def get_certificate_email_template(name, batch_year, amount, donation_id):
                 max-width: 600px;
                 margin: 0 auto;
                 padding: 20px;
+                background: #f5f5f5;
+            }}
+            .email-wrapper {{
+                background: white;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             }}
             .header {{
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-                padding: 40px 20px;
+                padding: 40px 30px;
                 text-align: center;
-                border-radius: 10px 10px 0 0;
             }}
             .header h1 {{
                 margin: 0;
                 font-size: 28px;
             }}
             .content {{
-                background: #f9f9f9;
-                padding: 30px 20px;
-                border-radius: 0 0 10px 10px;
-            }}
-            .highlight {{
-                background: white;
-                padding: 20px;
-                border-left: 4px solid #667eea;
-                margin: 20px 0;
+                padding: 40px 30px;
             }}
             .amount {{
-                font-size: 32px;
+                font-size: 36px;
                 color: #28a745;
                 font-weight: bold;
                 text-align: center;
                 margin: 20px 0;
             }}
             .footer {{
+                background: #f8f9fa;
+                padding: 30px;
                 text-align: center;
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 2px solid #ddd;
                 color: #666;
                 font-size: 14px;
             }}
         </style>
     </head>
     <body>
-        <div class="header">
-            <h1>🎓 Thank You for Your Generous Donation!</h1>
-        </div>
-        <div class="content">
-            <p>Dear <strong>{name}</strong>,</p>
-            
-            <p>On behalf of the entire Alumni Network, we extend our heartfelt gratitude for your generous donation.</p>
-            
-            <div class="highlight">
-                <p><strong>Donation Details:</strong></p>
-                <p>📅 Date: {datetime.now().strftime("%B %d, %Y")}<br>
-                📋 Certificate No: {cert_number}<br>
-                🎓 Batch: {batch_year}</p>
-                <div class="amount">₹ {amount:,.2f}</div>
+        <div class="email-wrapper">
+            <div class="header">
+                <h1>🎓 Thank You for Your Donation!</h1>
             </div>
-            
-            <p>Your contribution plays a vital role in strengthening our alumni community and creating opportunities for current and future students. We are deeply grateful for your support.</p>
-            
-            <p><strong>Your certificate of appreciation is attached to this email.</strong> Please keep it for your records.</p>
-            
-            <p>Thank you once again for your generosity and continued connection to our institution.</p>
-            
-            <p>With warm regards,<br>
-            <strong>The Alumni Network Team</strong></p>
-            
+            <div class="content">
+                <p>Dear <strong>{name}</strong>,</p>
+                <p>Thank you for your generous donation to the Alumni Network!</p>
+                
+                <div class="amount">₹ {amount}</div>
+                
+                <p><strong>Donation Details:</strong></p>
+                <ul>
+                    <li>Certificate No: {certificate_number}</li>
+                    <li>Batch Year: {batch_year}</li>
+                    <li>Date: {date}</li>
+                </ul>
+                
+                <p>Your certificate of appreciation is attached to this email.</p>
+                
+                <p>With gratitude,<br><strong>The Alumni Network Team</strong></p>
+            </div>
             <div class="footer">
-                <p>This is an automated message. Please do not reply to this email.<br>
-                For any queries, contact us at {ADMIN_EMAIL}</p>
+                <p>© {year} Alumni Network. All rights reserved.</p>
+                <p>Contact: {admin_email}</p>
             </div>
         </div>
     </body>
     </html>
     """
+ 
 
 def send_bulk_email(recipients, subject, message):
     """Send bulk email to multiple recipients"""
