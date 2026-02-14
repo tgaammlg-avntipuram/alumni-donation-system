@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .email-wrapper {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header .logo {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        
+        .header p {
+            margin: 0;
+            opacity: 0.95;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .greeting strong {
+            color: #667eea;
+        }
+        
+        .highlight-box {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        
+        .highlight-box h3 {
+            margin: 0 0 15px 0;
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .amount-display {
+            text-align: center;
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 100%);
+            border-radius: 10px;
+        }
+        
+        .amount-display .amount {
+            font-size: 36px;
+            color: #28a745;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .amount-display .amount-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .message-text {
+            line-height: 1.8;
+            color: #555;
+            margin: 20px 0;
+        }
+        
+        .certificate-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .certificate-notice i {
+            font-size: 32px;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .certificate-notice strong {
+            display: block;
+            color: #856404;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .signature {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .signature p {
+            margin: 5px 0;
+        }
+        
+        .signature strong {
+            color: #667eea;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 3px solid #667eea;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-links {
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            margin: 0 5px;
+            text-decoration: none;
+        }
+        
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            margin: 30px 0;
+            border-radius: 2px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .amount-display .amount {
+                font-size: 28px;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🎓</div>
+            <h1>Thank You for Your Generous Donation!</h1>
+            <p>Your contribution makes a real difference</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <p class="greeting">Dear <strong>{{ name }}</strong>,</p>
+            
+            <p class="message-text">
+                On behalf of the entire Alumni Network community, we are deeply grateful for your generous contribution. 
+                Your support strengthens the bonds that connect our alumni and creates lasting opportunities for future generations.
+            </p>
+            
+            <div class="divider"></div>
+            
+            <!-- Donation Details -->
+            <div class="highlight-box">
+                <h3>📋 Donation Details</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">📅 Date:</span>
+                    <span class="detail-value">{{ date }}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">🎓 Batch Year:</span>
+                    <span class="detail-value">{{ batch_year }}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">🔖 Certificate No:</span>
+                    <span class="detail-value">{{ certificate_number }}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">💳 Payment ID:</span>
+                    <span class="detail-value" style="font-size: 11px;">{{ payment_id }}</span>
+                </div>
+            </div>
+            
+            <!-- Amount -->
+            <div class="amount-display">
+                <p class="amount">₹ {{ amount }}</p>
+                <p class="amount-label">Donation Amount</p>
+            </div>
+            
+            <!-- Certificate Notice -->
+            <div class="certificate-notice">
+                <div style="font-size: 32px; margin-bottom: 10px;">📜</div>
+                <strong>Your Certificate of Appreciation is attached to this email</strong>
+                <p style="margin: 10px 0 0 0; color: #856404;">
+                    Please save it for your records
+                </p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p class="message-text">
+                Your generosity helps us:
+            </p>
+            <ul style="color: #555; line-height: 1.8; margin-left: 20px;">
+                <li>Support current students through scholarships and mentorship programs</li>
+                <li>Organize meaningful alumni networking events and reunions</li>
+                <li>Maintain and improve campus facilities</li>
+                <li>Fund research and innovation initiatives</li>
+                <li>Strengthen our global alumni community</li>
+            </ul>
+            
+            <p class="message-text">
+                We are honored by your commitment to our shared legacy and look forward to your continued 
+                involvement with the Alumni Network.
+            </p>
+            
+            <!-- Signature -->
+            <div class="signature">
+                <p>With heartfelt gratitude,</p>
+                <p><strong>The Alumni Network Team</strong></p>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    Building Bridges, Creating Opportunities
+                </p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Alumni Network</strong></p>
+            <p>Avanthipuram, Miryalaguda, Nalgonda, Telangana, 508207</p>
+            
+            <div class="social-links">
+                <a href="#" title="Facebook">f</a>
+                <a href="#" title="Twitter">t</a>
+                <a href="#" title="LinkedIn">in</a>
+                <a href="#" title="Instagram">ig</a>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This is an automated message. Please do not reply to this email.<br>
+                For questions, contact us at <a href="mailto:{{ admin_email }}">{{ admin_email }}</a>
+            </p>
+            
+            <p style="margin-top: 15px; font-size: 11px; color: #aaa;">
+                © {{ year }} Alumni Network. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

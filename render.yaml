@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: alumni-donation-system
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_SFzwVpWGa62eE9
+      - key: RAZORPAY_KEY_SECRET
+        value: 7TRTxl12pzlXqq1KvwgHBsvj
+      - key: GMAIL_USER
+        value: dattusrinu1122@gmail.com
+      - key: GMAIL_PASSWORD
+        value: rmnguxwerqmdzzrm
+      - key: ADMIN_EMAIL
+        value: dattusrinu1122@gmail.com
