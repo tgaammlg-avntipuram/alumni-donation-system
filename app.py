@@ -211,6 +211,107 @@ def admin_dashboard():
                          admin_name=session.get('admin_name'),
                          stats=stats,
                          donations=donations)
+@app.route('/test-email')
+def test_email():
+    """Test email sending - Remove this endpoint in production"""
+    try:
+        test_html = """
+        <h1>Test Email</h1>
+        <p>If you receive this, email configuration is working!</p>
+        """
+        
+        result = send_email_with_attachment(
+            to_email=ADMIN_EMAIL,
+            to_name='Admin',
+            subject='Test Email from Alumni System',
+            html_body=test_html
+        )
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Email sent successfully!'})
+        else:
+            return jsonify({'success': False, 'message': 'Email failed to send'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+@app.route('/admin/resend-certificate/<int:donation_id>', methods=['POST'])
+def resend_certificate(donation_id):
+    """Resend certificate email"""
+    if 'admin_id' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+    
+    try:
+        # Get donation details
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM donations WHERE id = ?', (donation_id,))
+        donation = cursor.fetchone()
+        conn.close()
+        
+        if not donation:
+            return jsonify({'success': False, 'message': 'Donation not found'}), 404
+        
+        # Generate certificate
+        pdf_buffer = generate_certificate_pdf(
+            name=donation['name'],
+            batch_year=donation['batch_year'],
+            amount=donation['amount'],
+            donation_id=donation_id
+        )
+        
+        # Send email
+        email_template = get_certificate_email_template(
+            name=donation['name'],
+            batch_year=donation['batch_year'],
+            amount=donation['amount'],
+            donation_id=donation_id
+        )
+        
+        email_sent = send_email_with_attachment(
+            to_email=donation['email'],
+            to_name=donation['name'],
+            subject='Your Donation Certificate - Alumni Network',
+            html_body=email_template,
+            pdf_attachment=pdf_buffer,
+            pdf_filename=f'certificate_{donation_id}.pdf'
+        )
+        
+        if email_sent:
+            mark_certificate_sent(donation_id)
+            return jsonify({'success': True, 'message': 'Certificate sent!'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send email'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Add a "Resend" button in the admin dashboard table.
+
+# ---
+
+# ## Quick Action Steps:
+
+# 1. **Update `email_service.py`** with better error handling (Option 1)
+# 2. **Generate new Gmail App Password** (Option 3)
+# 3. **Update GMAIL_PASSWORD in Render** environment variables
+# 4. **Commit and push to GitHub**
+# 5. **Test email endpoint**: Visit `/test-email`
+# 6. **Check Render logs** for detailed SMTP errors
+# 7. **Try donation again**
+
+# ---
+
+# ## Check Render Logs Now
+
+# Go to Render Dashboard → Logs and look for email-related errors. You should see something like:
+# ```
+# Attempting to send email to test@example.com
+# Connecting to Gmail SMTP...
+# Starting TLS...
+# Logging in as dattusrinu1122@gmail.com...
+# ✗ SMTP Authentication Error: (535, b'5.7.8 Username and Password not accepted')
+
 
 @app.route('/admin/send-email', methods=['POST'])
 def admin_send_email():
