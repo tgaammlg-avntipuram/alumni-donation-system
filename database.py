@@ -168,3 +168,10 @@ def add_email_log(recipient, subject, status='sent'):
     )
     conn.commit()
     conn.close()
+
+# Auto-initialize database when module is imported
+if __name__ != '__main__':
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
