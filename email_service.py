@@ -1,79 +1,52 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
+import base64
 
-SMTP_HOST = 'smtp.gmail.com'
-SMTP_PORT = 587
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 GMAIL_USER = os.getenv('GMAIL_USER', 'dattusrinu1122@gmail.com')
-GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'rmnguxwerqmdzzrm')
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'dattusrinu1122@gmail.com')
 
 def send_email_with_attachment(to_email, to_name, subject, html_body, pdf_attachment=None, pdf_filename='certificate.pdf'):
-    """Send email with optional PDF attachment using SMTP"""
-    
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.base import MIMEBase
-    from email import encoders
+    """Send email using SendGrid API"""
     
     try:
-        print(f"Attempting to send email to {to_email}")
+        print(f"Sending email to {to_email} via SendGrid...")
         
-        # Create message
-        msg = MIMEMultipart('alternative')
-        msg['From'] = f"Alumni Network <{GMAIL_USER}>"
-        msg['To'] = f"{to_name} <{to_email}>"
-        msg['Subject'] = subject
+        # Create email message
+        message = Mail(
+            from_email=GMAIL_USER,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_body
+        )
         
-        # Attach HTML body
-        html_part = MIMEText(html_body, 'html', 'utf-8')
-        msg.attach(html_part)
-        
-        # Attach PDF if provided
+        # Add PDF attachment if provided
         if pdf_attachment:
             try:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(pdf_attachment.read())
-                encoders.encode_base64(part)
-                part.add_header('Content-Disposition', f'attachment; filename={pdf_filename}')
-                msg.attach(part)
+                pdf_data = pdf_attachment.read()
+                encoded_file = base64.b64encode(pdf_data).decode()
+                
+                attached_file = Attachment(
+                    FileContent(encoded_file),
+                    FileName(pdf_filename),
+                    FileType('application/pdf'),
+                    Disposition('attachment')
+                )
+                message.attachment = attached_file
                 print("PDF attachment added")
             except Exception as pdf_err:
                 print(f"PDF attachment error: {pdf_err}")
         
-        # Connect to Gmail SMTP
-        print(f"Connecting to Gmail SMTP...")
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
-        server.set_debuglevel(1)  # Enable debug output
+        # Send email
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
         
-        print("Starting TLS...")
-        server.starttls()
-        
-        print(f"Logging in as {GMAIL_USER}...")
-        server.login(GMAIL_USER, GMAIL_PASSWORD)
-        
-        print("Sending email...")
-        server.send_message(msg)
-        
-        print("Closing connection...")
-        server.quit()
-        
-        print(f"✓ Email sent successfully to {to_email}")
+        print(f"✓ Email sent! Status code: {response.status_code}")
         return True
         
-    except smtplib.SMTPAuthenticationError as auth_err:
-        print(f"✗ SMTP Authentication Error: {auth_err}")
-        print("Please check your Gmail credentials and App Password")
-        return False
-    except smtplib.SMTPException as smtp_err:
-        print(f"✗ SMTP Error: {smtp_err}")
-        return False
     except Exception as e:
-        print(f"✗ Email sending error: {str(e)}")
+        print(f"✗ SendGrid error: {str(e)}")
         import traceback
         traceback.print_exc()
         return False
@@ -84,9 +57,7 @@ def get_certificate_email_template(name, batch_year, amount, donation_id):
     
     certificate_number = f'DON-{donation_id:06d}'
     date = datetime.now().strftime('%B %d, %Y')
-    payment_id = f'Payment #{donation_id}'
     year = datetime.now().year
-    admin_email = ADMIN_EMAIL
     
     return f"""
     <!DOCTYPE html>
@@ -129,6 +100,12 @@ def get_certificate_email_template(name, batch_year, amount, donation_id):
                 text-align: center;
                 margin: 20px 0;
             }}
+            .details {{
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }}
             .footer {{
                 background: #f8f9fa;
                 padding: 30px;
@@ -142,33 +119,38 @@ def get_certificate_email_template(name, batch_year, amount, donation_id):
         <div class="email-wrapper">
             <div class="header">
                 <h1>🎓 Thank You for Your Donation!</h1>
+                <p>Your generosity makes a difference</p>
             </div>
             <div class="content">
                 <p>Dear <strong>{name}</strong>,</p>
-                <p>Thank you for your generous donation to the Alumni Network!</p>
                 
-                <div class="amount">₹ {amount}</div>
+                <p>On behalf of the entire Alumni Network, we extend our heartfelt gratitude for your generous donation.</p>
                 
-                <p><strong>Donation Details:</strong></p>
-                <ul>
-                    <li>Certificate No: {certificate_number}</li>
-                    <li>Batch Year: {batch_year}</li>
-                    <li>Date: {date}</li>
-                </ul>
+                <div class="amount">₹ {amount:,.2f}</div>
                 
-                <p>Your certificate of appreciation is attached to this email.</p>
+                <div class="details">
+                    <p><strong>📋 Donation Details:</strong></p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>📅 Date: {date}</li>
+                        <li>🎓 Batch Year: {batch_year}</li>
+                        <li>🔖 Certificate No: {certificate_number}</li>
+                    </ul>
+                </div>
                 
-                <p>With gratitude,<br><strong>The Alumni Network Team</strong></p>
+                <p>Your <strong>Certificate of Appreciation</strong> is attached to this email. Please keep it for your records.</p>
+                
+                <p>Your contribution supports our alumni network and helps strengthen the bonds of our community.</p>
+                
+                <p style="margin-top: 30px;">With gratitude,<br><strong>The Alumni Network Team</strong></p>
             </div>
             <div class="footer">
                 <p>© {year} Alumni Network. All rights reserved.</p>
-                <p>Contact: {admin_email}</p>
+                <p>Contact: {ADMIN_EMAIL}</p>
             </div>
         </div>
     </body>
     </html>
     """
- 
 
 def send_bulk_email(recipients, subject, message):
     """Send bulk email to multiple recipients"""
@@ -183,7 +165,7 @@ def send_bulk_email(recipients, subject, message):
             <div style="max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #667eea;">Alumni Network Update</h2>
                 <div style="background: #f9f9f9; padding: 20px; border-radius: 10px;">
-                    {message}
+                    {message.replace(chr(10), '<br>')}
                 </div>
                 <p style="color: #666; font-size: 14px; margin-top: 20px;">
                     Best regards,<br>Alumni Network Team
