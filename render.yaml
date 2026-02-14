@@ -20,3 +20,62 @@ services:
         value: rmnguxwerqmdzzrm
       - key: ADMIN_EMAIL
         value: dattusrinu1122@gmail.com
+```
+
+5. Click **"Commit changes"**
+
+6. Wait for Render to auto-deploy (or manually trigger it)
+
+---
+
+### Step 2: Alternative - Delete Start Command Override
+
+The issue might be that Render has a manual override. Let's clear it:
+
+1. Go to **Render Dashboard** → Your Service
+2. Click **"Settings"**
+3. Scroll to **"Start Command"**
+4. If there's anything in the field, **DELETE IT COMPLETELY** (leave it empty)
+5. Click **"Save Changes"**
+
+This will make Render use the command from `render.yaml`.
+
+---
+
+### Step 3: Create a Procfile (Another Option)
+
+Create a new file called `Procfile` (no extension) in your repository:
+
+**Via GitHub:**
+1. Go to repository
+2. Click **"Add file"** → **"Create new file"**
+3. Name: `Procfile` (capital P, no extension)
+4. Content:
+```
+web: gunicorn app:app --bind 0.0.0.0:$PORT
+```
+5. Commit
+
+---
+
+### Step 4: Force Redeploy
+
+After making the changes:
+
+1. Go to Render Dashboard
+2. Click **"Manual Deploy"**
+3. Select **"Clear build cache & deploy"**
+
+---
+
+## Expected Success Output:
+```
+==> Running 'gunicorn app:app --bind 0.0.0.0:$PORT'
+                                        ^^^^^^^^
+[2026-02-14 18:57:09 +0000] [55] [INFO] Starting gunicorn 23.0.0
+[2026-02-14 18:57:09 +0000] [55] [INFO] Listening at: http://0.0.0.0:5000 (55)
+                                                                        ^^^^
+[2026-02-14 18:57:09 +0000] [55] [INFO] Using worker: sync
+[2026-02-14 18:57:09 +0000] [56] [INFO] Booting worker with pid: 56
+✓ Database initialized successfully
+==> Your service is live 🎉
